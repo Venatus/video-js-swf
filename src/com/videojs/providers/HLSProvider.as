@@ -53,12 +53,7 @@ package com.videojs.providers{
         private var _bytesTotal:Number = 0;
         private var _bufferedTime:Number = 0;
 
-        public function HLSProvider() {
-			HLSSettings.logDebug = true;
-			HLSSettings.logDebug2 = true;
-			HLSSettings.logInfo = true;
-			HLSSettings.logWarn = true;
-			HLSSettings.logError = true;
+        public function HLSProvider() {		
           Log.info("https://github.com/mangui/flashls/releases/tag/v0.3.5");
           _hls = new HLS();
           _model = VideoJSModel.getInstance();
@@ -229,7 +224,7 @@ package com.videojs.providers{
                 _model.broadcastEventExternally(ExternalEventName.ON_BUFFER_EMPTY);
                 break;
           }
-		   Log.debug("state 2:"+ _hlsState);
+		   
         };
 
 
