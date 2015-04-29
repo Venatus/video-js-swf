@@ -20,6 +20,9 @@ package com.videojs.providers{
   import org.mangui.hls.constant.HLSSeekStates;
   import org.mangui.hls.utils.Log;
   import org.mangui.hls.utils.Params2Settings;
+  import org.mangui.hls.model.Level;
+  
+  import flash.external.ExternalInterface;
 
   public class HLSProvider implements IProvider {
 
@@ -62,6 +65,62 @@ package com.videojs.providers{
           _hls.addEventListener(HLSEvent.SEEK_STATE,_seekStateHandler);
           _hls.addEventListener(HLSEvent.LEVEL_SWITCH,_levelSwitchHandler);
         }
+		
+		private function registerExternalMethods():void{
+            
+            try {
+				if (ExternalInterface.available) {
+					//assume always 1 single HLS provider is alive in a flash container!
+					ExternalInterface.addCallback("hls_getHLSBitrates", ext_getHLSBitrates);
+					ExternalInterface.addCallback("hls_setHLSBitrate",  ext_setHLSBitrate);
+					ExternalInterface.addCallback("hls_setHLSLevel",  ext_setHLSLevel);
+					ExternalInterface.addCallback("hls_enableHLSDynamicSwitching", ext_enableHLSDynamicSwitching);
+				}else {
+					Log.warn("ExternalInterface not available");					
+				}
+			}catch(e:SecurityError){
+                throw new SecurityError(e.message);
+            }
+            catch(e:Error){
+                throw new Error(e.message);
+            }
+            finally { }
+		}
+		private function unregisterExternalMethods():void {
+			
+		}
+		private function ext_getHLSBitrates():Array{
+			var retArr:Array = [];
+			for each(var l:Level in this._hls.levels) {
+				retArr.push({
+					bandwidth:l.bitrate,
+					resolution:l.width + 'x'+l.height,
+					name:l.name
+				}
+				);
+			}
+			return retArr;
+		}
+		private function ext_setHLSBitrate(bitrate:int):int {
+			if (bitrate < 0) {
+				this.level = -1;
+				return -1;
+			}
+			for (var i:uint = 0; i < this._hls.levels.length; i++) {
+				if (Level(this._hls.levels[i]).bitrate == bitrate) {
+						this.level = i;
+						return i;
+				}
+			}
+			return -1;
+		}
+		private function ext_setHLSLevel(level:int) :void{
+			this.level = level;
+		}
+		private function ext_enableHLSDynamicSwitching():void {
+				this.level = -1;
+		}
+		
 
         private function _completeHandler(event:HLSEvent):void {
           if(!_loop){
@@ -360,7 +419,7 @@ package com.videojs.providers{
         /**
          * Should return the most reasonable string representation of the current assets source location.
          */
-        public function init(pSrc:Object, pAutoplay:Boolean):void {
+        public function init(pSrc:Object, pAutoplay:Boolean):void {				
           if (pSrc.parameters.hls_live_flushurlcache == undefined){
             // video-js integration uses a different setting from flashls's default.
             pSrc.parameters.hls_live_flushurlcache = true;
@@ -397,6 +456,7 @@ package com.videojs.providers{
 
           _src = pSrc;
           _isAutoPlay = pAutoplay;
+		  registerExternalMethods();
           load();
           return;
         }
