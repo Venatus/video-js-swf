@@ -19,7 +19,8 @@
     <script>
       $(function(){
         $.ajax({
-          url: 'https://api.xmaven.com/media/54edf0e0ecf9099f218b45fd/5523b39beef909565c8e52cc?dfasfasd',
+          //url: 'https://api.xmaven.com/media/54edf0e0ecf9099f218b45fd/5523b39beef909565c8e52cc?dfasfasd',
+          url: 'https://api.xmaven.com/media/54edf0e0ecf9099f218b45fd/5540db9eeef909565c91ab11',
           cache: false,
           global: false,
           type: 'GET',
@@ -31,6 +32,8 @@
             console.log(hls);
             var media = $('<video>').attr('id','xmp').addClass('video-js').addClass('vjs-default-skin');
             media.append('<source src="'+hls+'" type="video/mp4" />');
+            //media.append('<source src="http://cdn1.vntsm.com/151780/151780.flv" type="video/flv" />');
+            
             $('body').append(media);
             
             var player = videojs('xmp', {
@@ -81,6 +84,15 @@
             );
             player.on('loadedmetadata', function(e){
             	var res = player.getHLSBitrates();
+            });
+            player.on('ended', function(e){
+            	//debugger;
+            });
+            player.on('play', function(e){
+            	//debugger;
+            });
+            player.on('timeupdate', function(e){
+            	//debugger;
             });
           },
           error: function(){ },

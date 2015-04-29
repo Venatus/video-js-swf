@@ -21,6 +21,7 @@ package com.videojs.providers{
   import org.mangui.hls.utils.Log;
   import org.mangui.hls.utils.Params2Settings;
   import org.mangui.hls.model.Level;
+  import org.mangui.hls.HLSSettings;
   
   import flash.external.ExternalInterface;
 
@@ -53,6 +54,11 @@ package com.videojs.providers{
         private var _bufferedTime:Number = 0;
 
         public function HLSProvider() {
+			HLSSettings.logDebug = true;
+			HLSSettings.logDebug2 = true;
+			HLSSettings.logInfo = true;
+			HLSSettings.logWarn = true;
+			HLSSettings.logError = true;
           Log.info("https://github.com/mangui/flashls/releases/tag/v0.3.5");
           _hls = new HLS();
           _model = VideoJSModel.getInstance();
@@ -126,6 +132,7 @@ package com.videojs.providers{
           if(!_loop){
             _isEnded = true;
             _isPaused = true;
+			_isPlaying = false;
             _model.broadcastEvent(new VideoPlaybackEvent(VideoPlaybackEvent.ON_STREAM_CLOSE, {}));
             _model.broadcastEventExternally(ExternalEventName.ON_PAUSE);
             _model.broadcastEventExternally(ExternalEventName.ON_PLAYBACK_COMPLETE);
@@ -187,7 +194,8 @@ package com.videojs.providers{
                 if(!_isPlaying) {
                   _model.broadcastEventExternally(ExternalEventName.ON_RESUME);
                   _isPlaying = true;
-                }                
+                }   
+				_model.broadcastEventExternally(ExternalEventName.ON_START);
                 break;
               case HLSPlayStates.PLAYING:
                 _isPaused = false;
@@ -200,6 +208,7 @@ package com.videojs.providers{
                   _isPlaying = true;
                 }                
                 _model.broadcastEventExternally(ExternalEventName.ON_CAN_PLAY);
+				_model.broadcastEventExternally(ExternalEventName.ON_START);
                 _model.broadcastEvent(new VideoPlaybackEvent(VideoPlaybackEvent.ON_STREAM_START, {info:{}}));
                 break;
               case HLSPlayStates.PAUSED:
@@ -220,6 +229,7 @@ package com.videojs.providers{
                 _model.broadcastEventExternally(ExternalEventName.ON_BUFFER_EMPTY);
                 break;
           }
+		   Log.debug("state 2:"+ _hlsState);
         };
 
 
