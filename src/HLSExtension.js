@@ -1,4 +1,5 @@
-videojs.plugin('HLSExtension', function(options){
+(function(){
+	var installedGlobal = false;
 	//the compiled callTech function :(
 	//added return
 	function N(a, c, d) {
@@ -13,52 +14,84 @@ videojs.plugin('HLSExtension', function(options){
   //          throw t.log(e), e;
         }
 	}
-	videojs.Player.prototype.getHLSBitrates = function(func){
-		return N(this, 'getHLSBitrates',[func]);    		
-	}
-	videojs.Player.prototype.setHLSBitrate = function(bitrate){
-		 return N(this, 'setHLSBitrate',bitrate);
-	}
-	videojs.Player.prototype.setHLSLevel = function(levelIndex){
-		 N(this, 'setHLSLevel',levelIndex);
-	}
-	videojs.Player.prototype.enableHLSDynamicSwitching = function(){
-		 N(this, 'enableHLSDynamicSwitching');
-	}
-	videojs.Flash.prototype.getHLSBitrates = function(args){
-		var t = this;
-		var del = function(){
-			var e = t.el();
-			if(e){    			
-				var res = e.hls_getHLSBitrates();
-				if(args && args.length>0 && args[0]){
-					args[0](res);
+	videojsExtensionMethods = {
+		player:{
+			getHLSBitrates:function(func){
+				return N(this, 'getHLSBitrates',[func]);    		
+			},
+			setHLSBitrate:function(bitrate){
+		 		return N(this, 'setHLSBitrate',bitrate);
+			},
+			setHLSLevel:function(levelIndex){
+		 		N(this, 'setHLSLevel',levelIndex);
+			},
+			enableHLSDynamicSwitching:function(){
+		 		N(this, 'enableHLSDynamicSwitching');
+			}			
+		},
+		flash:{
+			getHLSBitrates:function(args){
+				var t = this;
+				var del = function(){
+					var e = t.el();
+					if(e){    			
+						var res = e.hls_getHLSBitrates();
+						if(args && args.length>0 && args[0]){
+							args[0](res);
+						}
+						return res;
+					}
 				}
-				return res;
+				if(this.player().readyState()>=1){
+					return del();
+				}else{
+					this.player().one('loadedmetadata',del);
+				}
+			},
+			setHLSBitrate:function(bitrate){
+				var e = this.el();
+				if(e){    			
+					var res = e.hls_setHLSBitrate(parseInt(bitrate,10));
+				}
+			},
+			setHLSLevel:function(levelIndex){
+				var e = this.el();
+				if(e){    			
+					e.hls_setHLSLevel(parseInt(levelIndex,10));	
+				}
+			},
+			enableHLSDynamicSwitching:function(){
+				var e = this.el();
+				if(e){    			
+					e.hls_enableHLSDynamicSwitching();
+				}
 			}
 		}
-		if(this.player().readyState()>=1){
-			return del();
-		}else{
-			this.player().one('loadedmetadata',del);
+	}
+	function install(options){
+		if(installedGlobal) return;
+		for(var i in videojsExtensionMethods){
+			switch(i){
+				case 'player':
+					installOnObject(videojs.Player.prototype, videojsExtensionMethods[i], options);
+				break;
+				case 'flash':
+					installOnObject(videojs.Flash.prototype, videojsExtensionMethods[i], options);
+				break;
+			}
+		}
+		installedGlobal = true;
+	}
+	function installOnObject(obj, meths, options){
+		for(var i in meths){
+			if(!obj[i]){
+				obj[i] = meths[i];
+			}
 		}
 	}
-	videojs.Flash.prototype.setHLSBitrate = function(bitrate){
-		var e = this.el();
-		if(e){    			
-			var res = e.hls_setHLSBitrate(parseInt(bitrate,10));
-		}
-	}
-	videojs.Flash.prototype.setHLSLevel = function(levelIndex){
-		var e = this.el();
-		if(e){    			
-			e.hls_setHLSLevel(parseInt(levelIndex,10));	
-		}
-	}
-	videojs.Flash.prototype.enableHLSDynamicSwitching = function(){
-		var e = this.el();
-		if(e){    			
-			e.hls_enableHLSDynamicSwitching();
-		}
-	}
-});
+
+	videojs.plugin('HLSExtension', function(options){
+		install(options);
+	
+	});
+})()
