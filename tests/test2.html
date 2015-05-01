@@ -1,0 +1,109 @@
+<html>
+  <head>
+    <title>Xmaven | VJSXMP</title>
+    {# <script src=""></script> #}
+    {# <link href='' rel='stylesheet' type='text/css'> #}
+    
+    <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+    <link href="http://vjs.zencdn.net/4.12/video-js.css" rel="stylesheet">
+    <script src="http://vjs.zencdn.net/4.12/video.js"></script>
+    
+    <style>
+      .vjs-default-skin .vjs-play-progress { background: #900; }
+    </style>
+    
+    <script src="../src/HLSExtension.js"></script>
+    <script>
+    	videojs.options.flash.swf = '../dist/video-js.swf';
+    </script>
+    <script>
+      $(function(){
+        $.ajax({
+          //url: 'https://api.xmaven.com/media/54edf0e0ecf9099f218b45fd/5523b39beef909565c8e52cc?dfasfasd',
+          url: 'https://api.xmaven.com/media/54edf0e0ecf9099f218b45fd/5540db9eeef909565c91ab11',
+          cache: false,
+          global: false,
+          type: 'GET',
+          data: { },
+          dataType: 'jsonp',
+          success: function(rtn){
+            var mp4 = rtn.mp4s[0].path;
+            var hls = rtn.hls;
+            console.log(hls);
+            var media = $('<video>').attr('id','xmp').addClass('video-js').addClass('vjs-default-skin');
+            media.append('<source src="'+hls+'" type="video/mp4" />');
+            //media.append('<source src="http://cdn1.vntsm.com/151780/151780.flv" type="video/flv" />');
+            
+            $('body').append(media);
+            
+            var player = videojs('xmp', {
+                width: 580,
+                height: 360,
+                controls: true,
+                techOrder: ['flash','html5'],
+                plugins: {
+                	HLSExtension:{}
+                },
+                hls: {
+                  withCredentials: true
+                },
+                hls_debug2: true
+              },
+              function() {
+                this.play();                
+                this.getHLSBitrates(function(levels){
+              		var i;
+              		var sel1 = $('<select>');
+              		var sel2 = $('<select>');
+            			sel1.append('<option value="-1" SELECTED>auto</option>');
+            			sel2.append('<option value="-1" SELECTED>auto</option>');
+            			for(i=0;i<levels.length;i++){
+            				sel1.append('<option value="'+levels[i].bandwidth+'">'+((levels[i].name != null)?levels[i].name:Math.round(levels[i].bandwidth/1024)+' kbps')+'</option>');
+            				sel2.append('<option value="'+i+'">'+((levels[i].name != null)?levels[i].name:Math.round(levels[i].bandwidth/1024)+' kbps')+'</option>');
+            			}
+            			$('body').append(sel1);
+            			$('body').append(sel2);
+            			$(sel1).change(function(e){
+            				//this is also internally handled, but for sake of testing we'll handle it here
+            				if(this.value == -1){
+            					player.enableHLSDynamicSwitching();
+            				}else{
+            					player.setHLSBitrate(this.value);
+            				}
+            			});
+            			$(sel2).change(function(e){
+            				//this is also internally handled, but for sake of testing we'll handle it here
+            				if(this.value == -1){
+            					player.enableHLSDynamicSwitching();
+            				}else{
+            					player.setHLSLevel(this.value);
+            				}
+            			});
+              });
+              }
+            );
+            player.on('loadedmetadata', function(e){
+            	var res = player.getHLSBitrates();
+            });
+            player.on('ended', function(e){
+            	//debugger;
+            });
+            player.on('play', function(e){
+            	//debugger;
+            });
+            player.on('timeupdate', function(e){
+            	//debugger;
+            });
+          },
+          error: function(){ },
+          complete: function(){ }
+        });
+      });
+    </script>
+    
+    
+  </head>
+  <body>
+
+  </body>
+</html>
